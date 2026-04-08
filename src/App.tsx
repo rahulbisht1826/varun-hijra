@@ -34,7 +34,7 @@ const WINNING_COMBINATIONS = [
 export default function App() {
   const [gameState, setGameState] = useState<GameState>('LANDING');
   const [hasPlayedIntro, setHasPlayedIntro] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [howmPlay, setHowmPlay] = useState(false);
   const [board, setBoard] = useState<(SymbolType | null)[]>(Array(9).fill(null));
   const [player1Symbol, setPlayer1Symbol] = useState<SymbolType>('X');
   const [player2Symbol, setPlayer2Symbol] = useState<SymbolType>('Circle');
@@ -46,39 +46,7 @@ export default function App() {
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [scores, setScores] = useState({ P1: 0, P2: 0, Draws: 0 });
 
-  // Handle Intro Audio
-  useEffect(() => {
-    if (gameState !== 'INTRO' || hasPlayedIntro) return;
-
-    if (!audioRef.current) {
-      audioRef.current = new Audio(encodeURI('/music/varun hijra game studio.wav'));
-      audioRef.current.volume = 1.0;
-    }
-
-    const audio = audioRef.current;
-    
-    const startIntro = async () => {
-      try {
-        await audio.play();
-        setHasPlayedIntro(true);
-        
-        audio.onended = () => {
-          setGameState('GAME_MENU');
-        };
-      } catch (err) {
-        console.error("Audio playback failed even after interaction:", err);
-        // Fallback to menu if audio fails completely
-        setGameState('GAME_MENU');
-      }
-    };
-
-    startIntro();
-
-    return () => {
-      audio.pause();
-      audio.onended = null;
-    };
-  }, [gameState, hasPlayedIntro]);
+  // Refs and Effects for intro removed in favor of React audio element
 
   // Handle Keyboard Shortcuts for Navigation
   useEffect(() => {
@@ -182,7 +150,7 @@ export default function App() {
           <div className="w-20 h-20 border-2 border-white/20 rounded-full flex items-center justify-center mx-auto mb-8 animate-pulse">
             <Gamepad2 className="text-white w-10 h-10" />
           </div>
-          <h1 className="text-white text-2xl font-bold tracking-[0.2em] uppercase">Varun Game</h1>
+          <h1 className="text-white text-2xl font-bold tracking-[0.2em] uppercase">Varun Hijra Game Studio Presents</h1>
           <p className="text-white/40 text-xs font-mono uppercase tracking-widest animate-bounce">Click to Start</p>
         </motion.div>
       </div>
@@ -192,6 +160,9 @@ export default function App() {
   if (gameState === 'INTRO') {
     return (
       <div className="fixed inset-0 bg-[#141414] flex items-center justify-center z-50 overflow-hidden">
+        {/* The audio element will autoplay as soon as this screen renders because the user clicked to get here */}
+        <audio src="/music/intro-audio.wav" autoPlay preload="auto" />
+        
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -238,15 +209,15 @@ export default function App() {
           <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]" />
         </div>
 
-        {/* Fallback button */}
+        {/* Action button */}
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 2 }}
           onClick={() => setGameState('GAME_MENU')}
-          className="absolute bottom-12 text-white/60 hover:text-white text-[10px] font-mono uppercase tracking-[0.3em] border border-white/20 px-6 py-3 rounded-full transition-all hover:bg-white/5 hover:border-white/40 active:scale-95"
+          className="absolute bottom-12 text-white/60 hover:text-white text-[10px] font-mono uppercase tracking-[0.3em] border border-white/20 px-8 py-4 rounded-full transition-all hover:bg-white/10 hover:border-white/40 active:scale-95"
         >
-          Skip
+          Continue
         </motion.button>
       </div>
     );
