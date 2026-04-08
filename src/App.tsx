@@ -31,6 +31,9 @@ const WINNING_COMBINATIONS = [
   [0, 4, 8], [2, 4, 6]             // Diagonals
 ];
 
+const introAudio = new Audio('/music/intro-audio.wav');
+introAudio.volume = 1.0;
+
 export default function App() {
   const [gameState, setGameState] = useState<GameState>('LANDING');
   const [hasPlayedIntro, setHasPlayedIntro] = useState(false);
@@ -140,7 +143,11 @@ export default function App() {
     return (
       <div 
         className="fixed inset-0 bg-black flex items-center justify-center z-[100] cursor-pointer"
-        onClick={() => setGameState('INTRO')}
+        onClick={() => {
+          introAudio.currentTime = 0;
+          introAudio.play().catch(e => console.error("Hardware Autoplay blocked:", e));
+          setGameState('INTRO');
+        }}
       >
         <motion.div
           initial={{ opacity: 0 }}
@@ -160,9 +167,6 @@ export default function App() {
   if (gameState === 'INTRO') {
     return (
       <div className="fixed inset-0 bg-[#141414] flex items-center justify-center z-50 overflow-hidden">
-        {/* The audio element will autoplay as soon as this screen renders because the user clicked to get here */}
-        <audio src="/music/intro-audio.wav" autoPlay preload="auto" />
-        
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -214,7 +218,10 @@ export default function App() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 2 }}
-          onClick={() => setGameState('GAME_MENU')}
+          onClick={() => {
+            introAudio.pause();
+            setGameState('GAME_MENU');
+          }}
           className="absolute bottom-12 text-white/60 hover:text-white text-[10px] font-mono uppercase tracking-[0.3em] border border-white/20 px-8 py-4 rounded-full transition-all hover:bg-white/10 hover:border-white/40 active:scale-95"
         >
           Continue
