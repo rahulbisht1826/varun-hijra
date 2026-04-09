@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Circle, RotateCcw, Trophy, User, Cpu, Settings2, Info, Square, Triangle, Heart, Star, ChevronRight, ArrowLeft, Gamepad2, Zap, Bird } from 'lucide-react';
+import { X, Circle, RotateCcw, Trophy, User, Cpu, Settings2, Info, Square, Triangle, Heart, Star, ChevronRight, ArrowLeft, Gamepad2, Zap, Bird, Play } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,16 +14,26 @@ import { FloppyBird } from '@/src/components/FloppyBird';
 type SymbolType = 'X' | 'Circle' | 'Square' | 'Triangle' | 'Heart' | 'Star';
 type GameMode = 'PvP' | 'AI';
 type Difficulty = 'easy' | 'medium' | 'hard';
-type GameState = 'LANDING' | 'INTRO' | 'GAME_MENU' | 'MODE_SELECTION' | 'SYMBOL_SELECTION' | 'PLAYING' | 'DINO_GAME' | 'FLOPPY_BIRD';
+type GameState = 'INTRO' | 'GAME_MENU' | 'MODE_SELECTION' | 'SYMBOL_SELECTION' | 'PLAYING' | 'DINO_GAME' | 'FLOPPY_BIRD';
 
-const SYMBOLS: { type: SymbolType; icon: any; color: string }[] = [
-  { type: 'X', icon: X, color: 'text-red-500' },
-  { type: 'Circle', icon: Circle, color: 'text-blue-500' },
-  { type: 'Square', icon: Square, color: 'text-green-500' },
-  { type: 'Triangle', icon: Triangle, color: 'text-yellow-500' },
-  { type: 'Heart', icon: Heart, color: 'text-pink-500' },
-  { type: 'Star', icon: Star, color: 'text-purple-500' },
+const SYMBOLS: { type: SymbolType; icon: any; color: string; audioFile: string }[] = [
+  { type: 'X', icon: X, color: 'text-red-500', audioFile: '/music/bsdk varun.mp3' },
+  { type: 'Circle', icon: Circle, color: 'text-blue-500', audioFile: '/music/bull cut varun game player.mp3' },
+  { type: 'Square', icon: Square, color: 'text-green-500', audioFile: '/music/varun chutiya game player.mp3' },
+  { type: 'Triangle', icon: Triangle, color: 'text-yellow-500', audioFile: '/music/varun higra.mp3' },
+  { type: 'Heart', icon: Heart, color: 'text-pink-500', audioFile: '/music/varun hijra game player.mp3' },
+  { type: 'Star', icon: Star, color: 'text-purple-500', audioFile: '/music/varun turka.mp3' },
 ];
+
+
+
+const playSymbolSound = (audioFile: string) => {
+  const audio = new Audio(audioFile);
+  audio.play().catch(e => console.error("Audio playback blocked", e));
+};
+
+const bgMusic = new Audio('/music/topitop.mp3');
+bgMusic.loop = true;
 
 const WINNING_COMBINATIONS = [
   [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
@@ -31,12 +41,11 @@ const WINNING_COMBINATIONS = [
   [0, 4, 8], [2, 4, 6]             // Diagonals
 ];
 
-const introAudio = new Audio('/music/intro-audio.wav');
-introAudio.volume = 1.0;
-
 export default function App() {
-  const [gameState, setGameState] = useState<GameState>('LANDING');
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [gameState, setGameState] = useState<GameState>('INTRO');
   const [hasPlayedIntro, setHasPlayedIntro] = useState(false);
+  const [introMusicPlaying, setIntroMusicPlaying] = useState(false);
   const [howmPlay, setHowmPlay] = useState(false);
   const [board, setBoard] = useState<(SymbolType | null)[]>(Array(9).fill(null));
   const [player1Symbol, setPlayer1Symbol] = useState<SymbolType>('X');
@@ -50,6 +59,16 @@ export default function App() {
   const [scores, setScores] = useState({ P1: 0, P2: 0, Draws: 0 });
 
   // Refs and Effects for intro removed in favor of React audio element
+
+  // Manage background music for mini-games
+  useEffect(() => {
+    if (gameState === 'DINO_GAME' || gameState === 'FLOPPY_BIRD') {
+      bgMusic.play().catch(e => console.error("BGM Playback Error:", e));
+    } else {
+      bgMusic.pause();
+      bgMusic.currentTime = 0; // Reset track to beginning if desired
+    }
+  }, [gameState]);
 
   // Handle Keyboard Shortcuts for Navigation
   useEffect(() => {
@@ -99,6 +118,8 @@ export default function App() {
         const winnerSymbol = winnerNum === 1 ? player1Symbol : player2Symbol;
         const symbolConfig = SYMBOLS.find(s => s.type === winnerSymbol);
         
+        playSymbolSound('/music/elhamdil.mp3');
+        
         confetti({
           particleCount: 150,
           spread: 70,
@@ -139,34 +160,12 @@ export default function App() {
     setIsAiThinking(false);
   };
 
-  if (gameState === 'LANDING') {
-    return (
-      <div 
-        className="fixed inset-0 bg-black flex items-center justify-center z-[100] cursor-pointer"
-        onClick={() => {
-          introAudio.currentTime = 0;
-          introAudio.play().catch(e => console.error("Hardware Autoplay blocked:", e));
-          setGameState('INTRO');
-        }}
-      >
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center space-y-6"
-        >
-          <div className="w-20 h-20 border-2 border-white/20 rounded-full flex items-center justify-center mx-auto mb-8 animate-pulse">
-            <Gamepad2 className="text-white w-10 h-10" />
-          </div>
-          <h1 className="text-white text-2xl font-bold tracking-[0.2em] uppercase">Varun Hijra Game Studio Presents</h1>
-          <p className="text-white/40 text-xs font-mono uppercase tracking-widest animate-bounce">Click to Start</p>
-        </motion.div>
-      </div>
-    );
-  }
-
   if (gameState === 'INTRO') {
     return (
       <div className="fixed inset-0 bg-[#141414] flex items-center justify-center z-50 overflow-hidden">
+        {/* Hidden Audio Element */}
+        <audio ref={audioRef} src="/music/intro-audio.mp3" preload="auto" />
+        
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -213,19 +212,42 @@ export default function App() {
           <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]" />
         </div>
 
-        {/* Action button */}
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2 }}
-          onClick={() => {
-            introAudio.pause();
-            setGameState('GAME_MENU');
-          }}
-          className="absolute bottom-12 text-white/60 hover:text-white text-[10px] font-mono uppercase tracking-[0.3em] border border-white/20 px-8 py-4 rounded-full transition-all hover:bg-white/10 hover:border-white/40 active:scale-95"
-        >
-          Continue
-        </motion.button>
+        {/* Play Music Button */}
+        {!introMusicPlaying && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.5, duration: 0.5 }}
+            onClick={() => {
+              if (audioRef.current) {
+                audioRef.current.currentTime = 0;
+                audioRef.current.play().catch(e => console.error("Audio playback blocked:", e));
+              }
+              setIntroMusicPlaying(true);
+            }}
+            className="absolute bottom-24 text-white/70 hover:text-white text-[10px] font-mono uppercase tracking-[0.3em] border border-white/20 px-8 py-4 rounded-full transition-all hover:bg-white/10 hover:border-white/40 active:scale-95 group"
+          >
+            Play Intro
+          </motion.button>
+        )}
+
+        {/* Continue button - shown after music starts */}
+        {introMusicPlaying && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            onClick={() => {
+              if (audioRef.current) {
+                audioRef.current.pause();
+              }
+              setGameState('GAME_MENU');
+            }}
+            className="absolute bottom-12 text-white/60 hover:text-white text-[10px] font-mono uppercase tracking-[0.3em] border border-white/20 px-8 py-4 rounded-full transition-all hover:bg-white/10 hover:border-white/40 active:scale-95"
+          >
+            Continue
+          </motion.button>
+        )}
       </div>
     );
   }
@@ -434,6 +456,7 @@ export default function App() {
                     <div key={s.type} className="flex flex-col items-center gap-1">
                       <button
                         onClick={() => {
+                          playSymbolSound(s.audioFile);
                           setPlayer1Symbol(s.type);
                           if (s.type === player2Symbol) {
                             const next = SYMBOLS.find(sym => sym.type !== s.type);
@@ -470,7 +493,10 @@ export default function App() {
                     <div key={s.type} className="flex flex-col items-center gap-1">
                       <button
                         disabled={s.type === player1Symbol}
-                        onClick={() => setPlayer2Symbol(s.type)}
+                        onClick={() => {
+                          playSymbolSound(s.audioFile);
+                          setPlayer2Symbol(s.type);
+                        }}
                         className={cn(
                           "w-full aspect-square flex items-center justify-center rounded-xl border-2 transition-all",
                           player2Symbol === s.type 
